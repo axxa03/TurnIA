@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reservá tu turno · TurnIA</title>
+<meta name="description" content="Reservá online tu turno de peluquería y manicuría con presupuesto estimado y horarios reales.">
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/public.css">
+</head>
+<body>
+<div id="app"><div class="wrap" style="padding:60px 16px">Cargando…</div></div>
+<button id="chatBtn" class="chat-fab" aria-label="Abrir asistente">💬 Consultar</button>
+<div id="chat" class="chat hide">
+  <div class="chat-h"><b>Asistente TurnIA</b><button class="btn sm ghost" onclick="Chat.toggle()">✕</button></div>
+  <div class="chat-b" id="chatLog"></div>
+  <form class="chat-f" onsubmit="Chat.send(event)"><input id="chatIn" placeholder="Ej: ¿cuánto sale el balayage?" autocomplete="off"><button class="btn pri sm">Enviar</button></form>
+  <div class="small muted" style="padding:0 12px 10px">Responde con reglas y datos del local. No es una IA generativa salvo que el comercio la active.</div>
+</div>
+<script src="/common.js"></script>
+<script src="/public.js"></script>
+</body>
+</html>

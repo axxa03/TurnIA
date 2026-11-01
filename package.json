@@ -1,0 +1,9 @@
+{
+  "name": "turnia",
+  "version": "1.0.0",
+  "description": "TurnIA — reservas inteligentes para peluquerías y centros de manicuría",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "test": "node test/smoke.js" },
+  "engines": { "node": ">=22.13" },
+  "license": "MIT"
+}

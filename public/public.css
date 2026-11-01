@@ -1,0 +1,30 @@
+.top{position:sticky;top:0;z-index:20;background:rgba(250,248,253,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;height:62px}.brand{display:flex;align-items:center;gap:10px;font-weight:700;text-decoration:none;color:var(--ink)}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--p),#ec4899);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.hero{padding:56px 0 36px;background:radial-gradient(1200px 400px at 80% -10%,#ede4ff 0,transparent 60%),radial-gradient(800px 300px at 0% 0%,#ffe4f1 0,transparent 60%)}
+.hero p{font-size:18px;color:var(--mut);max-width:620px}
+section{padding:28px 0}.sec-h{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:14px}
+.svc{display:flex;flex-direction:column;gap:6px}.svc .price{font-weight:700}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pro{display:flex;gap:12px;align-items:flex-start}
+.promo{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:0}.promo .muted{color:#f5e9ff}
+.stars{color:#f59e0b;letter-spacing:2px}
+.foot{padding:30px 0 90px;color:var(--mut);font-size:14px;border-top:1px solid var(--line);margin-top:20px}
+/* asistente de reserva */
+.wiz{max-width:760px;margin:24px auto 80px}.steps{display:flex;gap:4px;margin-bottom:16px}.steps i{flex:1;height:5px;border-radius:9px;background:var(--line)}.steps i.on{background:var(--p)}
+.bubble{background:var(--pl);border-radius:16px 16px 16px 4px;padding:12px 16px;margin-bottom:14px;max-width:560px;color:#3b1d78}
+.bubble b{color:#2e1065}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.choice{border:1.5px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;background:#fff;text-align:left;font:inherit;width:100%}
+.choice:hover{border-color:var(--p2)}.choice.on{border-color:var(--p);background:var(--pl)}
+.slots{display:flex;flex-wrap:wrap;gap:8px}.slot{padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font:inherit;font-weight:600}
+.slot.on{border-color:var(--p);background:var(--p);color:#fff}.slot small{display:block;font-weight:500;font-size:11px;opacity:.8}
+.sum td{border:0;padding:5px 0}.total{font-size:20px;font-weight:800}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+/* chat */
+.chat-fab{position:fixed;right:16px;bottom:16px;z-index:40;border:0;background:var(--ink);color:#fff;padding:12px 16px;border-radius:999px;font:inherit;font-weight:600;box-shadow:var(--sh);cursor:pointer}
+.chat{position:fixed;right:16px;bottom:70px;z-index:41;width:min(380px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.18);display:flex;flex-direction:column;max-height:70vh}
+.chat-h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.chat-b{padding:12px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:8px;min-height:160px}
+.chat-b div{padding:8px 12px;border-radius:12px;max-width:88%;white-space:pre-line;font-size:14px}.chat-b .me{align-self:flex-end;background:var(--p);color:#fff}.chat-b .bot{background:var(--pl)}
+.chat-b .src{font-size:11px;color:var(--mut);background:none;padding:0 4px}
+.chat-f{display:flex;gap:6px;padding:10px 12px}
