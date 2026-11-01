@@ -73,17 +73,13 @@ Abrir `http://localhost:3000` y `http://localhost:3000/admin`. La base se crea e
 
 Prueba rápida: `npm test` (con el servidor corriendo) ejecuta un flujo de reserva y el test de doble reserva simultánea.
 
-## Asistente e IA opcional
+## IA conversacional
 
-Orden de respuesta: **1)** reglas sobre datos del local (precios, duraciones, horarios, promos, profesionales, próximos turnos) → **2)** base de conocimiento que carga el comercio en *Panel → Asistente* → **3)** solo si nada respondió y está habilitado, una llamada a una API compatible con OpenAI `/chat/completions`, con contexto mínimo del local, `max_tokens` bajo, temperatura 0.2, caché por pregunta y límite diario.
+Chat público integrado a la reserva y asistente de gestión en el panel. La IA usa **herramientas internas** del backend: consulta servicios, precios, agenda real, promociones, conocimiento aprobado e historial verificado. Prepara reservas, cancelaciones y reprogramaciones, que **solo se ejecutan cuando el cliente toca Confirmar** y el servidor revalida todo en una transacción. Incluye consultas sin respuesta derivadas al equipo, respuestas que vuelven al chat, conocimiento versionado con aprobación del propietario, fotos para evaluación profesional (sin análisis automático) y turnos de diagnóstico de 15 min configurables.
 
-La clave **nunca va en el código**. Se configura en el `.env` del servidor:
-```
-AI_API_URL=https://<endpoint de la API de IA de DonWeb>/v1/chat/completions
-AI_API_KEY=<tu clave>
-AI_MODEL=<modelo>
-```
-Luego, en *Panel → Asistente*, activar "Habilitar". Sin estas variables el asistente funciona igual con reglas.
+**Estado:** la integración con la API real de DonWeb queda **pendiente** de su documentación. Mientras tanto corre en **modo simulado** (reglas + conocimiento aprobado), identificado como tal en la interfaz. Detalles en [docs/IA.md](docs/IA.md).
+
+La clave **nunca va en el código**. Se configura solo en el `.env` del servidor (`AI_API_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_TIMEOUT`, `AI_TOOL_MODE`).
 
 ## Deploy
 
@@ -96,6 +92,7 @@ git clone <repo> /opt/turnia && bash /opt/turnia/deploy/setup.sh dwday-1252350.o
 - [Arquitectura](docs/ARQUITECTURA.md)
 - [Reglas de negocio](docs/REGLAS.md)
 - [Deploy](docs/DEPLOY.md)
+- [IA conversacional](docs/IA.md)
 
 ## Limitaciones conocidas
 - Puntos y recompensas por visitas: funcionalidad futura.

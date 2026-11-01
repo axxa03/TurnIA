@@ -13,10 +13,13 @@
 <div id="app"><div class="wrap" style="padding:60px 16px">Cargando…</div></div>
 <button id="chatBtn" class="chat-fab" aria-label="Abrir asistente">💬 Consultar</button>
 <div id="chat" class="chat hide">
-  <div class="chat-h"><b>Asistente TurnIA</b><button class="btn sm ghost" onclick="Chat.toggle()">✕</button></div>
+  <div class="chat-h"><div><b id="chatName">Asistente</b><div class="small muted" id="chatMode"></div></div><button class="btn sm ghost" onclick="Chat.toggle()" aria-label="Cerrar">✕</button></div>
+  <div id="chatResume" class="chat-resume hide"><span id="chatStep"></span><button class="btn sm pri" onclick="Chat.resume()">Volver a mi reserva →</button></div>
   <div class="chat-b" id="chatLog"></div>
-  <form class="chat-f" onsubmit="Chat.send(event)"><input id="chatIn" placeholder="Ej: ¿cuánto sale el balayage?" autocomplete="off"><button class="btn pri sm">Enviar</button></form>
-  <div class="small muted" style="padding:0 12px 10px">Responde con reglas y datos del local. No es una IA generativa salvo que el comercio la active.</div>
+  <div class="chat-sug" id="chatSug"></div>
+  <form class="chat-f" onsubmit="Chat.send(event)">
+    <label class="btn sm" title="Adjuntar foto" style="margin:0;padding:8px 10px;cursor:pointer">📎<input type="file" accept="image/*" class="hide" onchange="Chat.photo(this)"></label>
+    <input id="chatIn" placeholder="Escribí tu consulta…" autocomplete="off" maxlength="800"><button class="btn pri sm">Enviar</button></form>
 </div>
 <script src="/common.js"></script>
 <script src="/public.js"></script>

@@ -10,9 +10,11 @@ if (fs.existsSync(envFile)) for (const line of fs.readFileSync(envFile, 'utf8').
   const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/); if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^"|"$/g, '');
 }
 
+// El seed corre antes de cargar la IA (que agrega servicios de diagnóstico).
 const { seed } = require('./src/seed');
-const api = require('./src/api');
 seed();
+const api = require('./src/api');
+require('./src/ai/routes');
 
 const PUBLIC = path.join(__dirname, 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json' };

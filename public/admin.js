@@ -2,8 +2,9 @@
 const A = { user: null, pros: [], services: [], view: 'dashboard', ag: { mode: 'day', date: null, pro: '', svc: '', status: '' } };
 const aapi = (p, o = {}) => api(p, { ...o, admin: true }).catch(err => { if (err.status === 401) { localStorage.removeItem('turnia_staff'); boot(); } throw err; });
 const NAV = [['dashboard', '📊', 'Dashboard'], ['agenda', '📅', 'Agenda'], ['solicitudes', '📝', 'Solicitudes'], ['clientes', '👥', 'Clientes'], ['profesionales', '💇', 'Profesionales'],
-  ['servicios', '✂️', 'Servicios y precios'], ['promociones', '🎁', 'Promociones'], ['opiniones', '⭐', 'Opiniones'], ['recordatorios', '🔔', 'Recordatorios'], ['estadisticas', '📈', 'Estadísticas'],
-  ['asistente', '🤖', 'Asistente'], ['configuracion', '⚙️', 'Configuración']];
+  ['servicios', '✂️', 'Servicios y precios'], ['promociones', '🎁', 'Promociones'], ['opiniones', '⭐', 'Opiniones'], ['fotos', '📷', 'Fotos de clientes'], ['recordatorios', '🔔', 'Recordatorios'], ['estadisticas', '📈', 'Estadísticas'],
+  ['asistente', '🤖', 'Inteligencia artificial'], ['configuracion', '⚙️', 'Configuración']];
+const allowed = v => v === 'fotos' ? A.user.modules.includes('agenda') && !A.user.modules.includes('asistente') : A.user.modules.includes(v);
 const ROLE = { owner: 'Propietario', manager: 'Encargado', employee: 'Empleado' };
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 const proById = id => A.pros.find(p => p.id === id) || {};
@@ -29,19 +30,19 @@ async function boot() {
     [A.pros, A.services] = await Promise.all([aapi('/api/admin/professionals'), aapi('/api/admin/services')]);
   } catch { return loginView(); }
   A.view = location.hash.slice(2) || 'dashboard';
-  if (!A.user.modules.includes(A.view)) A.view = 'dashboard';
+  if (!allowed(A.view)) A.view = 'dashboard';
   shell(); show();
 }
 function shell() {
   const u = A.user;
   $('#app').innerHTML = `<div class="mtop"><button class="btn sm" onclick="$('.side').classList.toggle('open')">☰</button><b>TurnIA</b></div>
   <div class="shell"><nav class="side"><div class="brand"><span class="logo">T</span>TurnIA</div>
-  ${NAV.filter(n => u.modules.includes(n[0])).map(([k, i, l]) => `<a href="#/${k}" data-v="${k}">${i} ${l}</a>`).join('')}
+  ${NAV.filter(n => allowed(n[0])).map(([k, i, l]) => `<a href="#/${k}" data-v="${k}">${i} ${l}</a>`).join('')}
   <a href="/" target="_blank">🌐 Página pública</a>
   <div class="who"><b>${e(u.name)}</b><br>${ROLE[u.role]}<br><a href="javascript:void 0" style="padding:6px 0" onclick="localStorage.removeItem('turnia_staff');loginView()">Cerrar sesión</a></div></nav>
   <main class="main" id="main"></main></div>`;
 }
-window.addEventListener('hashchange', () => { if (!A.user) return; const v = location.hash.slice(2).split('?')[0]; if (A.user.modules.includes(v)) { A.view = v; show(); } });
+window.addEventListener('hashchange', () => { if (!A.user) return; const v = location.hash.slice(2).split('?')[0]; if (allowed(v)) { A.view = v; show(); } });
 async function show() {
   document.querySelectorAll('.side a').forEach(a => a.classList.toggle('on', a.dataset.v === A.view));
   $('.side')?.classList.remove('open');

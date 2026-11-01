@@ -20,7 +20,7 @@ function findServices(q) {
   }).slice(0, 4);
 }
 
-function ruleAnswer(question) {
+function ruleAnswer(question, { useKb = true } = {}) {
   const q = norm(question);
   const biz = getSetting('business', {});
   const out = [];
@@ -60,6 +60,7 @@ function ruleAnswer(question) {
   if (/telefono|whatsapp|contacto|instagram|mail/.test(q))
     return { text: `Tel: ${biz.phone} · WhatsApp: ${biz.whatsapp} · Instagram: ${biz.instagram}`, source: 'datos del local' };
 
+  if (!useKb) return null;
   // Base de conocimiento cargada por el comercio.
   let best = null, score = 0;
   for (const k of all('SELECT * FROM knowledge')) {
@@ -122,4 +123,6 @@ async function answer(question) {
 
 const aiStatus = () => ({ configured: !!(process.env.AI_API_URL && process.env.AI_API_KEY), ...getSetting('ai', {}), used_today: usage.day === T.today() ? usage.count : 0 });
 
-module.exports = { answer, aiStatus };
+const ruleAnswerOnly = async q => ruleAnswer(q, { useKb: false });
+
+module.exports = { answer, aiStatus, ruleAnswerOnly };

@@ -80,7 +80,7 @@ function seed() {
   setSetting('noshow_block_after', 3);
   setSetting('learning_min_records', 3);
   setSetting('promos_require_registration', true);
-  setSetting('ai', { enabled: false, max_tokens: 220, daily_limit: 60 });
+  setSetting('ai', { enabled: true, max_tokens: 450, daily_limit: 300, diagnosis_minutes: 15 });
 
   const sids = {};
   for (const s of SERVICES) {

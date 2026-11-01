@@ -74,6 +74,33 @@ CREATE TABLE IF NOT EXISTS payments (
   id INTEGER PRIMARY KEY, appointment_id INTEGER, kind TEXT, amount REAL, note TEXT, at TEXT);
 `);
 
+// Módulo de IA conversacional.
+db.exec(`
+CREATE TABLE IF NOT EXISTS ai_conversations (
+  id INTEGER PRIMARY KEY, token TEXT, kind TEXT DEFAULT 'cliente', client_id INTEGER, user_id INTEGER,
+  state TEXT DEFAULT '{}', summary TEXT DEFAULT '', created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS ai_messages (
+  id INTEGER PRIMARY KEY, conversation_id INTEGER, role TEXT, content TEXT, meta TEXT, created_at TEXT);
+CREATE INDEX IF NOT EXISTS idx_ai_msg ON ai_messages(conversation_id, id);
+CREATE TABLE IF NOT EXISTS ai_pending (
+  id INTEGER PRIMARY KEY, conversation_id INTEGER, client_id INTEGER, phone TEXT, question TEXT, category TEXT,
+  service_id INTEGER, status TEXT DEFAULT 'pendiente', assigned_to INTEGER, answer TEXT, answered_by TEXT,
+  answered_at TEXT, knowledge_id INTEGER, created_at TEXT);
+CREATE TABLE IF NOT EXISTS ai_photos (
+  id INTEGER PRIMARY KEY, conversation_id INTEGER, client_id INTEGER, service_id INTEGER, professional_id INTEGER,
+  image TEXT, note TEXT, choice TEXT, status TEXT DEFAULT 'nueva', answer TEXT, answered_by TEXT, answered_at TEXT,
+  appointment_id INTEGER, created_at TEXT);
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id INTEGER PRIMARY KEY, day TEXT, kind TEXT, provider TEXT, ok INTEGER, error TEXT, tokens INTEGER, ms INTEGER, created_at TEXT);
+CREATE TABLE IF NOT EXISTS ai_audit (
+  id INTEGER PRIMARY KEY, conversation_id INTEGER, action TEXT, detail TEXT, allowed INTEGER, created_at TEXT);
+`);
+// Base de conocimiento versionada (migración aditiva).
+for (const col of ["category TEXT DEFAULT 'faq'", "scope TEXT DEFAULT 'negocio'", "status TEXT DEFAULT 'aprobado'", 'version INTEGER DEFAULT 1',
+  'created_at TEXT', 'updated_at TEXT', 'created_by TEXT', 'approved_at TEXT', 'approved_by TEXT', 'source_pending_id INTEGER']) {
+  try { db.exec(`ALTER TABLE knowledge ADD COLUMN ${col}`); } catch { /* ya existe */ }
+}
+
 const all = (sql, ...p) => db.prepare(sql).all(...p);
 const get = (sql, ...p) => db.prepare(sql).get(...p);
 const run = (sql, ...p) => db.prepare(sql).run(...p);

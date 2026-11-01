@@ -76,7 +76,7 @@ function wizard() {
   const name = STEPS[S.step];
   const body = ({ datos: stDatos, categoria: stCat, servicios: stSvc, preguntas: stQ, estimacion: stEst, preferencias: stPref, profesional: stPro, horarios: stSlots, resumen: stSum })[name]();
   return header() + `<div class="wrap wiz"><div class="steps">${STEPS.map((_, i) => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="card">${body}</div><p class="small muted" style="text-align:center;margin-top:12px">Asistente TurnIA · basado en reglas y datos reales del local</p></div>`;
+    <div class="card">${body}</div><p class="small muted" style="text-align:center;margin-top:12px">¿Dudas sobre qué elegir? <a href="javascript:void 0" onclick="Chat.toggle(true)">Preguntale a la asistente</a> — tu reserva queda guardada.</p></div>`;
 }
 function go(d) { S.step = Math.max(0, S.step + d); if (STEPS[S.step] === 'preguntas' && !qServices().length && d < 0) S.step--; render(); scrollTo(0, 0); }
 async function next() {
@@ -126,14 +126,13 @@ function stDatos() {
 function knownView() {
   const k = S.known; if (!k) return '';
   if (!k.exists) return `<div class="note info" style="margin-top:10px">Es tu primera vez con nosotros. ¡Bienvenida/o!</div>`;
-  return `<div class="note ok" style="margin-top:10px">¡Hola de nuevo, <b>${e(k.first_name)}</b>! ${k.visits ? `Llevás ${k.visits} visita(s).` : ''}
-    ${k.last ? `Tu último servicio fue ${e(k.last.service)} con ${e(k.last.professional)}.` : ''} ${k.registered ? '' : ''}</div>`;
+  return `<div class="note ok" style="margin-top:10px">¡Hola de nuevo, <b>${e(k.first_name)}</b>! Ya tenemos tu historial: el local lo usa para atenderte mejor.</div>`;
 }
 async function lookup() {
   const p = S.client.phone.replace(/\D/g, ''); if (p.length < 8) return;
   try {
     S.known = await api('/api/public/lookup', { body: { phone: p } });
-    if (S.known.exists) { if (!S.client.first_name) S.client.first_name = S.known.first_name; if (!S.client.last_name) S.client.last_name = S.known.last_name; render(); }
+    if (S.known.exists) { if (!S.client.first_name) S.client.first_name = S.known.first_name; render(); }
     else $('#known').innerHTML = knownView();
   } catch { }
 }
@@ -358,12 +357,94 @@ async function clientLogin() {
 }
 
 /* ───────── Chat del asistente ───────── */
+// Conversación persistente en el servidor (id + token secreto en este navegador).
+// El chat NUNCA modifica el estado del formulario de reserva (S): solo lo lee como contexto.
 const Chat = {
-  toggle() { $('#chat').classList.toggle('hide'); if (!$('#chatLog').children.length) this.add('bot', `¡Hola! Preguntame por precios, duraciones, horarios, promociones o profesionales de ${INFO.business.name}.`); $('#chatIn').focus(); },
-  add(who, text, src) { const d = document.createElement('div'); d.className = who; d.textContent = text; $('#chatLog').appendChild(d);
-    if (src) { const s = document.createElement('div'); s.className = 'src'; s.textContent = 'Fuente: ' + src; $('#chatLog').appendChild(s); } $('#chatLog').scrollTop = 1e6; },
-  async send(ev) { ev.preventDefault(); const q = $('#chatIn').value.trim(); if (!q) return; $('#chatIn').value = ''; this.add('me', q);
-    try { const r = await api('/api/public/assistant', { body: { question: q } }); this.add('bot', r.text, r.source); } catch (err) { this.add('bot', err.message); } },
+  cfg: null, busy: false,
+  get conv() { try { return JSON.parse(localStorage.getItem('turnia_chat') || 'null'); } catch { return null; } },
+  set conv(v) { localStorage.setItem('turnia_chat', JSON.stringify(v)); },
+  async toggle(force) {
+    const el = $('#chat'); const open = force ?? el.classList.contains('hide'); el.classList.toggle('hide', !open);
+    if (!open) return;
+    this.cfg ||= await api('/api/ai/config').catch(() => ({ name: 'Asistente', welcome: '¡Hola! ¿En qué te ayudo?', suggestions: [] }));
+    $('#chatName').textContent = this.cfg.name;
+    $('#chatMode').textContent = this.cfg.real_ai ? 'Asistente con IA · consulta datos reales del local' : 'Modo sin IA: reglas y base de conocimiento';
+    this.syncResume(); await this.load(); $('#chatIn').focus();
+  },
+  syncResume() {
+    const inWizard = location.hash.startsWith('#/reservar') && !S.done && S.step > 0;
+    $('#chatResume').classList.toggle('hide', !inWizard);
+    if (inWizard) $('#chatStep').textContent = `Tu reserva sigue guardada (paso ${S.step + 1} de ${STEPS.length})`;
+  },
+  resume() { this.toggle(false); if (!location.hash.startsWith('#/reservar')) location.hash = '#/reservar'; },
+  async load() {
+    const c = this.conv; $('#chatLog').innerHTML = '';
+    if (!c) { this.add('bot', this.cfg.welcome); return this.sugs(); }
+    try {
+      const r = await api(`/api/ai/conversations/${c.id}?token=${encodeURIComponent(c.token)}`);
+      if (!r.messages.length) this.add('bot', this.cfg.welcome);
+      for (const m of r.messages) this.add(m.role === 'user' ? 'me' : m.role === 'staff' ? 'staff' : m.source === 'sistema' ? 'sys' : 'bot', m.role === 'staff' ? '👩‍💼 Equipo del local: ' + m.content : m.content, m.role === 'assistant' && m.source !== 'sistema' ? m.source : null);
+      if (r.pending_action) this.card(r.pending_action);
+    } catch { this.conv = null; this.add('bot', this.cfg.welcome); }
+    this.sugs();
+  },
+  sugs() { $('#chatSug').innerHTML = (this.cfg.suggestions || []).map(s => `<button class="chip" type="button">${e(s)}</button>`).join('');
+    $('#chatSug').querySelectorAll('button').forEach(b => b.onclick = () => { $('#chatIn').value = b.textContent; this.send(); }); },
+  add(who, text, src) {
+    const d = document.createElement('div'); d.className = who; d.textContent = text; $('#chatLog').appendChild(d);
+    if (src) { const s = document.createElement('div'); s.className = 'src'; s.textContent = src; $('#chatLog').appendChild(s); }
+    $('#chatLog').scrollTop = 1e6; return d;
+  },
+  card(a) {
+    const s = a.summary; const d = document.createElement('div'); d.className = 'bot chat-card';
+    const lines = a.type === 'book' ? [`<b>${e(s.fecha)}</b>`, ...s.detalle.map(e), `Duración: ${hm(s.duracion_min)}`, `Precio: ${e(s.precio)}`, s.sena ? `Seña: ${money(s.sena)}` : '', `Cancelación: ${e(s.cancelacion)}`]
+      : a.type === 'cancel' ? [`Turno ${e(s.codigo)} · ${e(s.fecha)}`, ...s.servicios.map(e), `<b>${e(s.consecuencia)}</b>`]
+      : [`Turno ${e(s.codigo)}: ${e(s.de)} → <b>${e(s.a)}</b>`, ...s.detalle.map(e)];
+    const label = { book: 'Confirmar reserva', cancel: 'Confirmar cancelación', reschedule: 'Confirmar cambio' }[a.type];
+    d.innerHTML = `<b>${{ book: 'Resumen de tu reserva', cancel: 'Cancelar turno', reschedule: 'Cambio de horario' }[a.type]}</b><ul>${lines.filter(Boolean).map(l => `<li>${l}</li>`).join('')}</ul>
+      <div class="row"><button class="btn pri sm">${label}</button><button class="btn sm">No, gracias</button></div>`;
+    const [yes, no] = d.querySelectorAll('button');
+    yes.onclick = async () => { yes.disabled = no.disabled = true; yes.textContent = 'Procesando…';
+      try { const r = await api(`/api/ai/conversations/${this.conv.id}/confirm`, { body: { token: this.conv.token, action_id: a.id } }); d.remove(); this.add('sys', r.message);
+        if (r.last_booking) localStorage.setItem('turnia_last', JSON.stringify(r.last_booking)); }
+      catch (err) { d.remove(); this.add('sys', err.message); } };
+    no.onclick = async () => { d.remove(); await api(`/api/ai/conversations/${this.conv.id}/dismiss`, { body: { token: this.conv.token } }).catch(() => { }); this.add('sys', 'Listo, no hice ningún cambio.'); };
+    $('#chatLog').appendChild(d); $('#chatLog').scrollTop = 1e6;
+  },
+  wizardCtx() {
+    if (!location.hash.startsWith('#/reservar') || S.done) return null;
+    return { step: STEPS[S.step], services: S.services.map(id => svc(id)?.name), first_name: S.client.first_name, phone: S.client.phone };
+  },
+  async send(ev) {
+    ev?.preventDefault(); const q = $('#chatIn').value.trim(); if (!q || this.busy) return;
+    $('#chatIn').value = ''; $('#chatSug').innerHTML = ''; this.add('me', q); this.busy = true;
+    const t = this.add('bot typing', ''); t.innerHTML = '<span></span><span></span><span></span>';
+    try {
+      const c = this.conv;
+      const r = await api('/api/ai/chat', { body: { message: q, conversation_id: c?.id, token: c?.token, wizard: this.wizardCtx() } });
+      this.conv = { id: r.conversation_id, token: r.token }; t.remove();
+      this.add('bot', r.reply, r.source); if (r.action) this.card(r.action);
+    } catch (err) {
+      t.remove(); this.add('sys', err.status === 403 ? 'La conversación expiró; empezamos una nueva.' : `No pude responder (${err.message}). Podés seguir con el formulario de reserva.`);
+      if (err.status === 403) this.conv = null;
+    } finally { this.busy = false; this.syncResume(); }
+  },
+  async photo(input) {
+    const f = input.files[0]; input.value = ''; if (!f) return;
+    if (!this.conv) { toast('Escribí primero un mensaje para iniciar la conversación'); return; }
+    const img = await shrink(f); this.add('me', '📎 Foto adjunta');
+    try {
+      const r = await api(`/api/ai/conversations/${this.conv.id}/photo`, { body: { token: this.conv.token, image: img, service_id: S.services[0] || null } });
+      const d = this.add('bot chat-card', '');
+      d.innerHTML = `${e(r.message)}<div style="margin-top:8px"><label>A) Enviar a</label><select>${r.professionals.map(p => `<option value="${p.id}">${e(p.name)}</option>`).join('')}</select>
+        <div class="row" style="margin-top:6px"><button class="btn pri sm">Enviar al profesional</button></div>
+        <div class="row" style="margin-top:6px">${r.diagnosis.map(s => `<button class="btn sm" data-diag="${s.id}">B) ${e(s.name)} (${r.diagnosis.length ? this.cfg.diagnosis_minutes : 15} min)</button>`).join('')}</div></div>`;
+      d.querySelector('.btn.pri').onclick = async () => {
+        try { const x = await api(`/api/ai/conversations/${this.conv.id}/photo/${r.photo_id}/send`, { body: { token: this.conv.token, professional_id: Number(d.querySelector('select').value) } }); d.remove(); this.add('sys', x.message); }
+        catch (err) { this.add('sys', err.message); } };
+      d.querySelectorAll('[data-diag]').forEach(b => b.onclick = () => { S.preset = Number(b.dataset.diag); this.toggle(false); if (location.hash.startsWith('#/reservar')) { resetWizard(); render(); } else location.hash = '#/reservar'; });
+    } catch (err) { this.add('sys', err.message); }
+  },
 };
 $('#chatBtn').onclick = () => Chat.toggle();
 

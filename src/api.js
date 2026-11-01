@@ -48,8 +48,8 @@ async function handle(req, res, url) {
     }
     send(200, await r.fn(ctx));
   } catch (e) {
-    if (!(e instanceof HttpError)) console.error(e);
-    send(e.status || 500, { error: e instanceof HttpError ? e.message : 'Error interno' });
+    if (!(e instanceof HttpError) && !e.status) console.error(e);
+    send(e.status || 500, { error: e instanceof HttpError || e.status ? e.message : 'Error interno' });
   }
 }
 
@@ -193,11 +193,9 @@ route('GET', '/api/public/info', () => ({
 
 route('POST', '/api/public/lookup', ({ body }) => {
   const c = get('SELECT * FROM clients WHERE phone = ?', phoneNorm(body.phone));
+  // Solo se confirma la existencia y el nombre: el historial requiere verificación.
   if (!c) return { exists: false };
-  const st = clientStats(c.id);
-  const last = get(`SELECT s.name service, p.name professional, a.start_at FROM appointments a JOIN appointment_items i ON i.appointment_id=a.id
-    JOIN services s ON s.id=i.service_id JOIN professionals p ON p.id=i.professional_id WHERE a.client_id=? AND a.status='finalizada' ORDER BY a.start_at DESC LIMIT 1`, c.id);
-  return { exists: true, first_name: c.first_name, last_name: c.last_name, registered: !!c.registered, visits: st.done || 0, last };
+  return { exists: true, first_name: c.first_name, registered: !!c.registered };
 });
 
 route('POST', '/api/public/register', ({ body }) => {
@@ -760,4 +758,4 @@ route('PUT', '/api/admin/users/:id', { module: 'configuracion' }, ({ params, bod
 
 route('GET', '/api/health', () => ({ ok: true, time: T.nowLocal(), tz: T.TZ }));
 
-module.exports = { handle };
+module.exports = { handle, route, fail, HttpError, J, phoneNorm, money, STATUS_LABEL, DAYS, auth, clientStats, upsertClient, createAppointment, appointmentDetail, cancelAppointment, availability, bestPromo, notify, history, findConflicts };

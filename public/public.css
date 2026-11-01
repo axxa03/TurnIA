@@ -28,3 +28,10 @@ section{padding:28px 0}.sec-h{display:flex;align-items:end;justify-content:space
 .chat-b div{padding:8px 12px;border-radius:12px;max-width:88%;white-space:pre-line;font-size:14px}.chat-b .me{align-self:flex-end;background:var(--p);color:#fff}.chat-b .bot{background:var(--pl)}
 .chat-b .src{font-size:11px;color:var(--mut);background:none;padding:0 4px}
 .chat-f{display:flex;gap:6px;padding:10px 12px}
+.chat{height:min(620px,78vh)}.chat-b .staff{background:#ecfdf5;border:1px solid #a7f3d0}.chat-b .sys{background:#f3f4f6;font-size:13px}
+.chat-resume{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--pl);font-size:13px}
+.chat-sug{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px}.chat-sug button{font-size:12px;padding:5px 10px}
+.chat-card{background:#fff!important;border:1.5px solid var(--p);max-width:100%!important;white-space:normal!important}.chat-card ul{margin:6px 0;padding-left:18px}
+.typing span{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:var(--p2);animation:tp 1s infinite}.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,100%{opacity:.3}50%{opacity:1}}
+@media(max-width:640px){.chat{right:8px;left:8px;width:auto;bottom:64px;height:80vh}}
