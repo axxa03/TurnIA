@@ -35,3 +35,4 @@ section{padding:28px 0}.sec-h{display:flex;align-items:end;justify-content:space
 .typing span{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:var(--p2);animation:tp 1s infinite}.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
 @keyframes tp{0%,100%{opacity:.3}50%{opacity:1}}
 @media(max-width:640px){.chat{right:8px;left:8px;width:auto;bottom:64px;height:80vh}}
+@media(max-width:640px){.top .wrap{gap:6px}.brand{min-width:0;flex:1}.brand span:last-child{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.top .grow{display:none}.top .btn.sm{padding:6px 8px;font-size:12px}}
