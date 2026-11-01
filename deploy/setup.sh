@@ -30,12 +30,15 @@ systemctl daemon-reload
 systemctl enable --now turnia
 systemctl restart turnia
 
-sed "s/__DOMAIN__/$DOMAIN www.$DOMAIN/" "$APP_DIR/deploy/nginx.conf" > /etc/nginx/sites-available/turnia
-ln -sf /etc/nginx/sites-available/turnia /etc/nginx/sites-enabled/turnia
-rm -f /etc/nginx/sites-enabled/default
-nginx -t && systemctl reload nginx
+# Nginx: se desactivan los sitios por defecto (sites-enabled y conf.d de la imagen) para que TurnIA atienda el puerto 80.
+rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/turnia
+for f in /etc/nginx/conf.d/default.conf; do [ -f "$f" ] && mv "$f" "$f.disabled"; done
+sed "s/__DOMAIN__/$DOMAIN www.$DOMAIN/" "$APP_DIR/deploy/nginx.conf" > /etc/nginx/conf.d/turnia.conf
+nginx -t
+systemctl restart nginx
 
 if command -v ufw >/dev/null; then ufw allow OpenSSH || true; ufw allow 'Nginx Full' || true; fi
 sleep 2
-curl -fsS http://127.0.0.1:3000/api/health && echo && echo "TurnIA OK → http://$DOMAIN"
+curl -fsS http://127.0.0.1:3000/api/health >/dev/null
+curl -fsS http://127.0.0.1/api/health && echo && echo "TurnIA OK (app + nginx) → http://$DOMAIN"
 echo "HTTPS opcional: apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d $DOMAIN -d www.$DOMAIN"
